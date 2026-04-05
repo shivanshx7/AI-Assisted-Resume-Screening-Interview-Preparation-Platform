@@ -2,7 +2,7 @@
 
 ---
 
-## Parameters need to be taken from google form form every online class
+## Parameters need to be taken from google form every online class
 - Participant Ratings
 - quiz score
 - student feedback
