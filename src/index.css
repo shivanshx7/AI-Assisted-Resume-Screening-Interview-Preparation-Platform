@@ -1,0 +1,47 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+:root {
+  font-family: 'Inter', system-ui, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: dark;
+}
+
+@layer utilities {
+  .neon-card {
+    @apply bg-[#111111] border border-white/10 shadow-2xl;
+  }
+  .neon-card-hover {
+    @apply hover:border-white/20 hover:bg-[#151515] transition-all duration-300;
+  }
+  .text-glow {
+    text-shadow: 0 0 20px currentColor;
+  }
+  
+  .animate-in {
+    animation: animate-in 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+@keyframes animate-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+body {
+  margin: 0;
+  background-color: #050505; /* Super dark background */
+  color: #ededed;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+/* Beautiful moving dark glowing orbs */
+.bg-neon {
+  background-image: 
+    radial-gradient(circle at 15% 50%, rgba(79, 70, 229, 0.15), transparent 25%),
+    radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.1), transparent 25%);
+  background-attachment: fixed;
+}
