@@ -8,11 +8,19 @@ import AlertsPanel from './components/AlertsPanel';
 import AISuggestions from './components/AISuggestions';
 import SeedButton from './components/SeedButton';
 import { uploadTestData } from './functionalities/testUpload';
+import { syncGoogleSheets } from './functionalities/googleSheetsSync';
+import { useEffect } from 'react';
 
 export default function App() {
   const [selectedStudentId, setSelectedStudentId] = useState(null);
   const [activePage, setActivePage] = useState('Dashboard');
   const [testStatus, setTestStatus] = useState(null);
+
+  useEffect(() => {
+    // Run the Google Sheets sync automatically on load (as requested).
+    // This will fetch the latest form responses and update Firebase.
+    syncGoogleSheets();
+  }, []);
 
   const handleTestUpload = async () => {
     setTestStatus('testing');
