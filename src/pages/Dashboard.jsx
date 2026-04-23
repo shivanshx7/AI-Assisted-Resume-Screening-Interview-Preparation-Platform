@@ -1,48 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import StudentCard from '../components/StudentCard';
 import { WeeklyAverageChart, CategoryPieChart, SentimentBarChart } from '../components/Charts';
 import StudentTable from '../components/StudentTable';
 import AlertsPanel from '../components/AlertsPanel';
 import AISuggestions from '../components/AISuggestions';
-import { getStudents } from '../data/firebaseService';
 
-export default function Dashboard({ onSelectStudent }) {
-  const [students, setStudents] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchData = async () => {
-    const studentsData = await getStudents();
-    setStudents(studentsData);
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      const [studentsData, trendsData, categoriesData, sentimentsData] = await Promise.all([
-        getStudents(),
-        getClassAverageTrends(),
-        getCategoryDistribution(),
-        getSentimentDistribution()
-      ]);
-      setStudents(studentsData);
-      setTrends(trendsData);
-      setCategories(categoriesData);
-      setSentiments(sentimentsData);
-      setLoading(false);
-    };
-
-    fetchData();
-
-    // Listen for sync completion to refresh UI
-    const handleSync = () => {
-      console.log("Sync event received in Dashboard, refreshing data...");
-      fetchData();
-    };
-    window.addEventListener('googleSheetsSynced', handleSync);
-    
-    return () => window.removeEventListener('googleSheetsSynced', handleSync);
-  }, []);
+export default function Dashboard({ onSelectStudent, students = [], loading = false }) {
 
   if (loading) {
     return (

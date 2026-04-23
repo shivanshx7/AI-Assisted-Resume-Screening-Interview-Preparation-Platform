@@ -133,3 +133,61 @@ export const findStudentByQuery = async (query) => {
       s.name.toLowerCase().includes(q) || s.id.toLowerCase().includes(q)
   );
 };
+
+/**
+ * Generates specific intervention suggestions for a single student
+ */
+export const generateStudentIntervention = async (student) => {
+  if (!genAI) {
+    return {
+      text: "⚠️ **AI not configured.** Please add your `VITE_GEMINI_API_KEY` to a `.env` file.",
+      isError: true,
+    };
+  }
+
+  try {
+    const weekly = Array.isArray(student.weeklyHistory) ? student.weeklyHistory.join(", ") : "N/A";
+    const sentiment = Array.isArray(student.sentimentHistory)
+      ? student.sentimentHistory.join(", ")
+      : student.sentiment || "N/A";
+    const logs = student.feedback.map(f => `[${f.date}] ${f.text}`).join("\n");
+
+    const prompt = `System: You are an expert educational consultant and student psychologist.
+Analyze the following data for student ${student.name} (ID: ${student.id}) and provide 3-4 specific, actionable suggestions/interventions to improve their engagement or maintain their high performance.
+
+STUDENT DATA:
+- Engagement Score: ${student.engagementScore}%
+- Participation: ${student.participation}%
+- Quiz Score: ${student.quizScore}%
+- Category: ${student.category}
+- At Risk: ${student.atRisk ? "YES" : "No"}
+- Sentiment History: [${sentiment}]
+- Engagement History (Last Weeks): [${weekly}]
+- Recent Logs/Feedback:
+${logs || "No logs available."}
+
+Guidelines:
+1. Provide a brief analysis of their current condition.
+2. Give 3-4 distinct actionable suggestions.
+3. Be professional, supportive, and data-driven.
+4. Format output in JSON-like structure but as text for the model:
+   Analysis: [Short analysis]
+   Plan:
+   - [Suggestion Title]: [Description]
+   - [Suggestion Title]: [Description]
+   ...
+
+KEEP IT CONCISE.`;
+
+    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return { text: response.text(), isError: false };
+  } catch (err) {
+    console.error("Intervention generation error:", err);
+    return {
+      text: `❌ Error: ${err.message}`,
+      isError: true,
+    };
+  }
+};

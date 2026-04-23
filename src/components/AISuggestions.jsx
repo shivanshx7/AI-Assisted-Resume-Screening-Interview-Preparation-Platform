@@ -1,8 +1,8 @@
 import React from 'react';
-import { Cpu, Terminal, Zap } from 'lucide-react';
+import { Cpu, Terminal, Zap, Info } from 'lucide-react';
 
-export default function AISuggestions() {
-  const suggestions = [
+export default function AISuggestions({ title = "AI Directives", suggestions: propSuggestions }) {
+  const defaultSuggestions = [
     {
       icon: <Terminal size={14} />,
       title: 'Optimize participation',
@@ -23,20 +23,41 @@ export default function AISuggestions() {
     }
   ];
 
+  const displaySuggestions = propSuggestions || defaultSuggestions;
+
+  // Handle case where feedback is a single string (AI generated text)
+  if (typeof displaySuggestions === 'string') {
+    return (
+      <div className="neon-card rounded-2xl p-6 md:p-8">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-8 h-8 bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center rounded-lg shadow-[0_0_15px_rgba(99,102,241,0.2)]">
+            <Cpu size={16} className="text-indigo-400" />
+          </div>
+          <h2 className="text-[13px] font-black text-slate-300 uppercase tracking-widest">{title}</h2>
+        </div>
+        <div className="prose prose-invert prose-xs max-w-none">
+          <div className="text-xs font-mono text-slate-400 whitespace-pre-wrap leading-relaxed bg-[#0a0a0a] p-4 rounded-xl border border-[#222]">
+            {displaySuggestions}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="neon-card rounded-2xl p-6 md:p-8">
       <div className="flex items-center gap-3 mb-6">
         <div className="w-8 h-8 bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center rounded-lg shadow-[0_0_15px_rgba(99,102,241,0.2)]">
           <Cpu size={16} className="text-indigo-400" />
         </div>
-        <h2 className="text-[13px] font-black text-slate-300 uppercase tracking-widest">AI Directives</h2>
+        <h2 className="text-[13px] font-black text-slate-300 uppercase tracking-widest">{title}</h2>
       </div>
       
       <div className="space-y-3">
-        {suggestions.map((s, i) => (
+        {displaySuggestions.map((s, i) => (
           <div key={i} className="flex gap-4 items-start p-3.5 rounded-xl bg-[#141414] border border-[#222] hover:border-indigo-500/20 transition-all cursor-crosshair group">
-            <div className={`p-2 rounded bg-black border ${s.color}`}>
-              {s.icon}
+            <div className={`p-2 rounded bg-black border ${s.color || 'text-slate-400 border-slate-700'}`}>
+              {s.icon || <Info size={14} />}
             </div>
             <div>
               <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wide group-hover:text-indigo-400 transition-colors">{s.title}</h4>

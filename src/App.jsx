@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
 import Dashboard from './pages/Dashboard';
@@ -11,14 +11,26 @@ import AIChatbot from './components/AIChatbot';
 import ChatPopup from './components/ChatPopup';
 import { uploadTestData } from './functionalities/testUpload';
 import { syncGoogleSheets } from './functionalities/googleSheetsSync';
-import { useEffect } from 'react';
+import { getStudents } from './data/firebaseService';
 
 export default function App() {
   const [selectedStudentId, setSelectedStudentId] = useState(null);
   const [activePage, setActivePage] = useState('Dashboard');
   const [testStatus, setTestStatus] = useState(null);
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchData = async () => {
+    setLoading(true);
+    const data = await getStudents();
+    setStudents(data);
+    setLoading(false);
+  };
 
   useEffect(() => {
+    // Initial fetch
+    fetchData();
+
     // Run the Google Sheets sync automatically on load
     syncGoogleSheets();
 
@@ -27,7 +39,17 @@ export default function App() {
       syncGoogleSheets();
     }, 30000);
 
-    return () => clearInterval(interval);
+    // Listen for sync completion to refresh UI
+    const handleSync = () => {
+      console.log("Sync event received in App, refreshing data...");
+      fetchData();
+    };
+    window.addEventListener('googleSheetsSynced', handleSync);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('googleSheetsSynced', handleSync);
+    };
   }, []);
 
   const handleTestUpload = async () => {
@@ -60,7 +82,7 @@ export default function App() {
                 onBack={() => setSelectedStudentId(null)} 
               />
             ) : activePage === 'Dashboard' ? (
-              <Dashboard onSelectStudent={setSelectedStudentId} />
+              <Dashboard onSelectStudent={setSelectedStudentId} students={students} loading={loading} />
             ) : activePage === 'Nodes' ? (
               <div className="space-y-8 animate-in relative">
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-4">
@@ -71,7 +93,14 @@ export default function App() {
                     <p className="text-slate-400 font-medium text-sm tracking-wide uppercase">All Active Terminals</p>
                   </div>
                 </div>
-                <StudentTable onSelectStudent={setSelectedStudentId} />
+                {loading ? (
+                   <div className="h-[40vh] flex flex-col items-center justify-center">
+                    <div className="w-10 h-10 border-2 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin mb-4"></div>
+                    <p className="text-slate-500 font-mono text-[9px] tracking-widest uppercase animate-pulse">Accessing Node Directory...</p>
+                  </div>
+                ) : (
+                  <StudentTable students={students} onSelectStudent={setSelectedStudentId} />
+                )}
               </div>
             ) : activePage === 'Interventions' ? (
               <div className="space-y-8 animate-in relative">
@@ -83,10 +112,17 @@ export default function App() {
                     <p className="text-slate-400 font-medium text-sm tracking-wide uppercase">System Anomalies & Logs</p>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  <AlertsPanel />
-                  <AISuggestions />
-                </div>
+                {loading ? (
+                   <div className="h-[40vh] flex flex-col items-center justify-center">
+                    <div className="w-10 h-10 border-2 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin mb-4"></div>
+                    <p className="text-slate-500 font-mono text-[9px] tracking-widest uppercase animate-pulse">Scanning Protocols...</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <AlertsPanel students={students} />
+                    <AISuggestions />
+                  </div>
+                )}
               </div>
             ) : activePage === 'AIAssistant' ? (
               <AIChatbot />

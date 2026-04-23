@@ -1,11 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Key, Terminal, Calendar, TrendingUp, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Key, Terminal, Calendar, TrendingUp, AlertTriangle, Sparkles } from 'lucide-react';
 import { getStudentById } from '../data/firebaseService';
+import { generateStudentIntervention } from '../functionalities/aiService';
 import { WeeklyAverageChart, StudentPerformanceChart } from '../components/Charts';
+import AISuggestionModal from '../components/AISuggestionModal';
 
 export default function StudentDetails({ studentId, onBack }) {
   const [student, setStudent] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [aiSuggestion, setAiSuggestion] = useState(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+
+  const handleGenerateAISuggestion = async () => {
+    if (!student) return;
+    setIsGenerating(true);
+    setShowModal(true);
+    const result = await generateStudentIntervention(student);
+    setAiSuggestion(result.text);
+    setIsGenerating(false);
+  };
 
   useEffect(() => {
     const fetchStudent = async () => {
@@ -85,7 +99,16 @@ export default function StudentDetails({ studentId, onBack }) {
             </div>
           </div>
           
-          <div className="flex gap-4 w-full md:w-auto">
+          <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+            <button 
+              onClick={handleGenerateAISuggestion}
+              className="flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white text-xs font-black transition-all shadow-[0_0_20px_rgba(99,102,241,0.3)] hover:shadow-[0_0_30px_rgba(99,102,241,0.5)] group overflow-hidden relative"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]"></div>
+              <Sparkles size={16} className="text-indigo-200" />
+              <span className="uppercase tracking-widest relative z-10">Generate AI Intervention</span>
+            </button>
+
             <div className="px-5 py-4 rounded-xl bg-[#0a0a0a] border border-[#222] shadow-inner flex flex-col items-center justify-center min-w-[120px]">
               <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Integrity</span>
               {student.atRisk ? (
@@ -105,6 +128,15 @@ export default function StudentDetails({ studentId, onBack }) {
           </div>
         </div>
       </div>
+
+      {showModal && (
+        <AISuggestionModal 
+          student={student} 
+          suggestion={aiSuggestion} 
+          loading={isGenerating} 
+          onClose={() => setShowModal(false)} 
+        />
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-2 space-y-8">

@@ -1,10 +1,26 @@
 import React, { useState } from 'react';
-import { Search, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
+import AISuggestionModal from './AISuggestionModal';
+import { generateStudentIntervention } from '../functionalities/aiService';
 
 export default function StudentTable({ students = [], onSelectStudent }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: 'engagementScore', direction: 'desc' });
   const [filter, setFilter] = useState('All');
+  const [selectedStudentForAI, setSelectedStudentForAI] = useState(null);
+  const [aiSuggestion, setAiSuggestion] = useState(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [showAIModal, setShowAIModal] = useState(false);
+
+  const handleAIAction = async (e, student) => {
+    e.stopPropagation(); // Don't trigger onSelectStudent
+    setSelectedStudentForAI(student);
+    setIsGenerating(true);
+    setShowAIModal(true);
+    const result = await generateStudentIntervention(student);
+    setAiSuggestion(result.text);
+    setIsGenerating(false);
+  };
 
   const sortedStudents = [...students].sort((a, b) => {
     if (a[sortConfig.key] < b[sortConfig.key]) {
@@ -90,6 +106,7 @@ export default function StudentTable({ students = [], onSelectStudent }) {
               </th>
               <th className="p-5">STATUS</th>
               <th className="p-5 text-right">ALERT</th>
+              <th className="p-5 text-right">ACTION</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#222]">
@@ -138,6 +155,16 @@ export default function StudentTable({ students = [], onSelectStudent }) {
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600">STABLE</span>
                   )}
                 </td>
+                <td className="p-5 text-right">
+                   <button 
+                    onClick={(e) => handleAIAction(e, student)}
+                    className="p-2 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 hover:bg-indigo-500 hover:text-white transition-all group/ai relative"
+                    title="Generate AI Strategy"
+                   >
+                     <Sparkles size={14} />
+                     <span className="absolute bottom-full right-0 mb-2 whitespace-nowrap bg-[#0a0a0a] border border-[#222] text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded opacity-0 group-hover/ai:opacity-100 transition-opacity pointer-events-none">AI STRATEGY</span>
+                   </button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -148,6 +175,19 @@ export default function StudentTable({ students = [], onSelectStudent }) {
           </div>
         )}
       </div>
+
+      {showAIModal && (
+        <AISuggestionModal 
+          student={selectedStudentForAI} 
+          suggestion={aiSuggestion} 
+          loading={isGenerating} 
+          onClose={() => {
+            setShowAIModal(false);
+            setAiSuggestion(null);
+            setSelectedStudentForAI(null);
+          }} 
+        />
+      )}
     </div>
   );
 }
