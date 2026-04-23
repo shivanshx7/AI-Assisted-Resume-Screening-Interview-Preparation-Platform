@@ -7,6 +7,8 @@ import StudentTable from './components/StudentTable';
 import AlertsPanel from './components/AlertsPanel';
 import AISuggestions from './components/AISuggestions';
 import SeedButton from './components/SeedButton';
+import AIChatbot from './components/AIChatbot';
+import ChatPopup from './components/ChatPopup';
 import { uploadTestData } from './functionalities/testUpload';
 import { syncGoogleSheets } from './functionalities/googleSheetsSync';
 import { useEffect } from 'react';
@@ -49,7 +51,7 @@ export default function App() {
           onLogoClick={() => { setSelectedStudentId(null); setActivePage('Dashboard'); }} 
           onMenuClick={() => setSelectedStudentId(null)}
         />
-        <div className="flex-1 flex flex-col relative w-full h-full overflow-y-auto">
+        <div className={`flex-1 flex flex-col relative w-full h-full ${activePage === 'AIAssistant' ? 'overflow-hidden' : 'overflow-y-auto'}`}>
           <Navbar />
           <main className="p-6 md:p-8 lg:p-10 flex-1 max-w-[1600px] mx-auto w-full">
             {selectedStudentId ? (
@@ -86,6 +88,8 @@ export default function App() {
                   <AISuggestions />
                 </div>
               </div>
+            ) : activePage === 'AIAssistant' ? (
+              <AIChatbot />
             ) : activePage === 'Settings' ? (
               <div className="space-y-8 animate-in relative">
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-4">
@@ -126,7 +130,9 @@ export default function App() {
             ) : null}
           </main>
         </div>
+        <ChatPopup />
       </div>
     </div>
   );
 }
+
